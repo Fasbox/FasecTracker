@@ -71,6 +71,7 @@ export interface TemplateField {
   label: string
   type: 'rich_text' | 'text' | 'number'
   required: boolean
+  default_content?: object  // Tiptap JSON que se copia al crear una pieza
 }
 
 export interface TemplateChecklistItem {

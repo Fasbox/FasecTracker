@@ -1,11 +1,11 @@
 'use client'
 
 import { use, useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useTemplates, useUpdateTemplate } from '@/features/templates/useTemplates'
 import {
-  ArrowLeft, Plus, Trash2, GripVertical, Loader2,
-  CheckSquare, AlignLeft, Star
+  ArrowLeft, Plus, Trash2, Loader2,
+  CheckSquare, AlignLeft, Star, ChevronDown, ChevronRight
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -13,13 +13,17 @@ import { CONTENT_TYPE_LABELS } from '@/types/app.types'
 import type { ContentType, TemplateStructure, TemplateField, TemplateChecklistItem } from '@/types/app.types'
 import { nanoid } from '@/lib/nanoid'
 
+const RichEditor = dynamic(
+  () => import('@/components/editor/RichEditor').then((m) => m.RichEditor),
+  { ssr: false, loading: () => <div className="h-24 rounded-md border border-border bg-background animate-pulse" /> }
+)
+
 interface Props {
   params: Promise<{ projectId: string; templateId: string }>
 }
 
 export default function TemplateEditorPage({ params }: Props) {
   const { projectId, templateId } = use(params)
-  const router = useRouter()
   const { data: templates, isLoading } = useTemplates(projectId)
   const updateTemplate = useUpdateTemplate(projectId)
 
@@ -33,6 +37,16 @@ export default function TemplateEditorPage({ params }: Props) {
   const [isDefault, setIsDefault] = useState(false)
   const [saved, setSaved] = useState(false)
   const [newChecklistLabel, setNewChecklistLabel] = useState('')
+  // Controla qué secciones tienen el editor de contenido predeterminado expandido
+  const [expandedDefaults, setExpandedDefaults] = useState<Set<string>>(new Set())
+
+  const toggleDefault = (key: string) => {
+    setExpandedDefaults((prev) => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
 
   useEffect(() => {
     if (template) {
@@ -42,6 +56,13 @@ export default function TemplateEditorPage({ params }: Props) {
       setDefaultContentType(template.structure?.default_content_type ?? 'video')
       setFields(template.structure?.fields ?? [])
       setChecklist(template.structure?.checklist ?? [])
+      // Expande automáticamente las secciones que ya tienen contenido predeterminado
+      const withContent = new Set(
+        (template.structure?.fields ?? [])
+          .filter((f) => f.default_content)
+          .map((f) => f.key)
+      )
+      setExpandedDefaults(withContent)
     }
   }, [template])
 
@@ -284,9 +305,44 @@ export default function TemplateEditorPage({ params }: Props) {
                       type="text"
                       value={(field as TemplateField & { description?: string }).description ?? ''}
                       onChange={(e) => updateField(index, { description: e.target.value } as Partial<TemplateField>)}
-                      placeholder="Descripción o pregunta guía (ej. ¿Cómo vas a captar la atención en los primeros 5 segundos?)"
+                      placeholder="Pregunta guía (ej. ¿Cómo vas a captar la atención?)"
                       className="w-full rounded border border-border bg-background px-2.5 py-1.5 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     />
+
+                    {/* Contenido predeterminado (expandible) */}
+                    <div className="rounded-md border border-border bg-background/50">
+                      <button
+                        type="button"
+                        onClick={() => toggleDefault(field.key)}
+                        className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {expandedDefaults.has(field.key)
+                          ? <ChevronDown className="h-3 w-3" />
+                          : <ChevronRight className="h-3 w-3" />
+                        }
+                        Contenido predeterminado
+                        {field.default_content && !expandedDefaults.has(field.key) && (
+                          <span className="ml-auto rounded bg-primary/15 px-1.5 py-0.5 text-[10px] text-primary font-medium">
+                            configurado
+                          </span>
+                        )}
+                      </button>
+
+                      {expandedDefaults.has(field.key) && (
+                        <div className="border-t border-border">
+                          <p className="px-2.5 py-1.5 text-[11px] text-muted-foreground">
+                            Este texto aparecerá pre-cargado cada vez que crees una pieza con este template.
+                          </p>
+                          <RichEditor
+                            content={field.default_content ?? null}
+                            onChange={(content) => updateField(index, { default_content: content })}
+                            placeholder={`Escribe el contenido predeterminado para "${field.label}"...`}
+                            autosaveMs={500}
+                            className="min-h-[100px]"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <button

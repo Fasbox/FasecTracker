@@ -59,9 +59,9 @@ export async function createItem(
 
     if (template) {
       templateSnapshot = template.structure
-      // Inicializar fields_data vacíos según template
-      template.structure.fields?.forEach((field: { key: string }) => {
-        fieldsData[field.key] = { type: 'doc', content: [{ type: 'paragraph' }] }
+      // Inicializar fields_data con contenido predeterminado del template (o vacío)
+      template.structure.fields?.forEach((field: { key: string; default_content?: object }) => {
+        fieldsData[field.key] = field.default_content ?? { type: 'doc', content: [{ type: 'paragraph' }] }
       })
       // Snapshot del checklist
       checklistData = (template.structure.checklist || []).map((item: { id: string; label: string }) => ({
