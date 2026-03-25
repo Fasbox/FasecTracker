@@ -15,6 +15,7 @@ interface ProjectTopbarProps {
 const PROJECT_TABS = [
   { label: 'Kanban',     path: 'kanban'     },
   { label: 'Calendario', path: 'calendar'   },
+  { label: 'Notas',      path: 'notes'      },
   { label: 'Templates',  path: 'templates'  },
   { label: 'Ajustes',    path: 'settings'   },
 ]

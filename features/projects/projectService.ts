@@ -85,6 +85,18 @@ export async function updateProject(id: string, values: Partial<ProjectFormValue
   return data as Project
 }
 
+export async function updateProjectNotes(id: string, notes: object): Promise<Project> {
+  const { data, error } = await supabase
+    .from('projects')
+    .update({ notes, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Project
+}
+
 export async function deleteProject(id: string): Promise<void> {
   const { error } = await supabase
     .from('projects')

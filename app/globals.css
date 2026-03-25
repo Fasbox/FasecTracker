@@ -72,6 +72,14 @@ body {
 .ProseMirror table { border-collapse: collapse; width: 100%; }
 .ProseMirror th, .ProseMirror td { border: 1px solid var(--border); padding: 4px 8px; min-width: 60px; }
 .ProseMirror th { background: var(--muted); font-weight: 600; }
+
+/* Listas — Tailwind v4 resetea list-style, hay que restaurarlo explícitamente */
+.ProseMirror ul:not([data-type="taskList"]) { list-style: disc; padding-left: 1.4rem; }
+.ProseMirror ol { list-style: decimal; padding-left: 1.4rem; }
+.ProseMirror li { margin-block: 0.2rem; }
+.ProseMirror li > p { margin: 0; }
+
+/* Checklist */
 .ProseMirror ul[data-type="taskList"] { list-style: none; padding: 0; }
 .ProseMirror ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 8px; }
 .ProseMirror ul[data-type="taskList"] li input[type="checkbox"] { margin-top: 3px; cursor: pointer; }

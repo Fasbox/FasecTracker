@@ -48,3 +48,14 @@ export function useDeleteProject() {
     onSuccess: () => qc.invalidateQueries({ queryKey: projectKeys.all }),
   })
 }
+
+export function useUpdateProjectNotes(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (notes: object) => projectService.updateProjectNotes(id, notes),
+    // Actualización optimista — no invalida para evitar loop en el editor
+    onSuccess: (updated) => {
+      qc.setQueryData(projectKeys.detail(id), updated)
+    },
+  })
+}

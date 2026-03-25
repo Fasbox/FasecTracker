@@ -45,6 +45,7 @@ export interface Project {
   color: string
   cover_url: string | null
   owner_id: string
+  notes: object | null
   created_at: string
   updated_at: string
   deleted_at: string | null
