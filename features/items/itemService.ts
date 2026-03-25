@@ -152,6 +152,60 @@ export async function updateChecklist(id: string, checklistData: ChecklistDataIt
   if (error) throw error
 }
 
+export async function duplicateItem(id: string): Promise<ContentItem> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autenticado')
+
+  // Obtener el item original con todas sus relaciones
+  const { data: original, error: fetchError } = await supabase
+    .from('content_items')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (fetchError || !original) throw fetchError ?? new Error('Pieza no encontrada')
+
+  // Posición al final de la misma columna
+  const { data: lastItem } = await supabase
+    .from('content_items')
+    .select('kanban_order')
+    .eq('project_id', original.project_id)
+    .eq('status', original.status)
+    .is('deleted_at', null)
+    .order('kanban_order', { ascending: false })
+    .limit(1)
+    .single()
+
+  const kanban_order = computeKanbanOrder(lastItem?.kanban_order ?? null, null)
+
+  const { data, error } = await supabase
+    .from('content_items')
+    .insert({
+      project_id: original.project_id,
+      template_id: original.template_id,
+      template_snapshot: original.template_snapshot,
+      title: `${original.title} (copia)`,
+      status: original.status,
+      content_type: original.content_type,
+      published_at: null,
+      category_id: original.category_id,
+      series_id: original.series_id,
+      assigned_to: original.assigned_to,
+      fields_data: original.fields_data,
+      checklist_data: (original.checklist_data ?? []).map(
+        (item: { id: string; label: string }) => ({ id: item.id, label: item.label, checked: false })
+      ),
+      meta: original.meta ?? {},
+      created_by: user.id,
+      kanban_order,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as ContentItem
+}
+
 export async function deleteItem(id: string): Promise<void> {
   const { error } = await supabase
     .from('content_items')

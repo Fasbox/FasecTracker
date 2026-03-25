@@ -18,11 +18,13 @@ export function KanbanColumn({ status, items, projectId }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
 
   return (
+    // setNodeRef en el wrapper completo — el header también es drop target
     <div
+      ref={setNodeRef}
       className={cn(
         'flex h-full w-64 flex-none flex-col rounded-xl border border-border bg-muted/30',
-        'transition-colors',
-        isOver && 'border-primary/50 bg-primary/5'
+        'transition-colors duration-150',
+        isOver && 'border-primary/60 bg-primary/5 shadow-[0_0_0_2px] shadow-primary/20'
       )}
     >
       {/* Column header */}
@@ -43,7 +45,6 @@ export function KanbanColumn({ status, items, projectId }: KanbanColumnProps) {
         strategy={verticalListSortingStrategy}
       >
         <div
-          ref={setNodeRef}
           className={cn(
             'flex flex-1 flex-col gap-2 overflow-y-auto p-2',
             'scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent'
@@ -53,8 +54,11 @@ export function KanbanColumn({ status, items, projectId }: KanbanColumnProps) {
             <KanbanCard key={item.id} item={item} projectId={projectId} />
           ))}
           {items.length === 0 && (
-            <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-border text-xs text-muted-foreground">
-              Sin piezas
+            <div className={cn(
+              'flex h-20 items-center justify-center rounded-lg border border-dashed text-xs text-muted-foreground transition-colors',
+              isOver ? 'border-primary/50 bg-primary/5 text-primary' : 'border-border'
+            )}>
+              {isOver ? 'Soltar aquí' : 'Sin piezas'}
             </div>
           )}
         </div>

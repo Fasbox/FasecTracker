@@ -84,6 +84,14 @@ export function useUpdateChecklist(itemId: string, projectId: string) {
   })
 }
 
+export function useDuplicateItem(projectId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => itemService.duplicateItem(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: itemKeys.byProject(projectId) }),
+  })
+}
+
 export function useDeleteItem(projectId: string) {
   const qc = useQueryClient()
   return useMutation({

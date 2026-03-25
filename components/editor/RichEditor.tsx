@@ -10,7 +10,7 @@ import { TableRow } from '@tiptap/extension-table-row'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { TableCell } from '@tiptap/extension-table-cell'
 import Placeholder from '@tiptap/extension-placeholder'
-import { useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
 import { EditorToolbar } from './EditorToolbar'
 import { cn } from '@/lib/utils'
 
@@ -31,8 +31,12 @@ export function RichEditor({
   className,
   autosaveMs = 1500,
 }: RichEditorProps) {
+  // content se usa SOLO como valor inicial al montar el editor.
+  // Para cambiar de sección/tab, el padre debe usar key= en este componente.
+  // Nunca sincronizamos content de vuelta hacia adentro para evitar
+  // que el refetch de TanStack Query rompa el cursor mientras se escribe.
   const debouncedOnChange = useCallback(
-    debounce((content: object) => onChange?.(content), autosaveMs),
+    debounce((json: object) => onChange?.(json), autosaveMs),
     [onChange, autosaveMs]
   )
 
@@ -56,16 +60,6 @@ export function RichEditor({
     },
   })
 
-  // Sync content desde fuera solo si cambia completamente (ej. cambio de tab/sección)
-  useEffect(() => {
-    if (!editor || !content) return
-    const current = JSON.stringify(editor.getJSON())
-    const incoming = JSON.stringify(content)
-    if (current !== incoming) {
-      editor.commands.setContent(content)
-    }
-  }, [JSON.stringify(content)])
-
   if (!editor) return null
 
   return (
@@ -77,7 +71,7 @@ export function RichEditor({
           'prose prose-sm dark:prose-invert max-w-none flex-1',
           'prose-headings:font-semibold prose-p:leading-relaxed',
           'focus-within:outline-none',
-          '[&_.ProseMirror]:min-h-[120px] [&_.ProseMirror]:p-3 [&_.ProseMirror]:focus:outline-none',
+          '[&_.ProseMirror]:min-h-30 [&_.ProseMirror]:p-3 [&_.ProseMirror]:focus:outline-none',
           '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground',
           '[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
           '[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left',
