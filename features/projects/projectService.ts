@@ -97,6 +97,44 @@ export async function updateProjectNotes(id: string, notes: object): Promise<Pro
   return data as Project
 }
 
+export async function addMemberByEmail(projectId: string, email: string): Promise<void> {
+  // Buscar el perfil por email
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, email')
+    .eq('email', email.trim().toLowerCase())
+    .single()
+
+  if (profileError || !profile) {
+    throw new Error('No se encontró ningún usuario con ese email. Debe registrarse primero.')
+  }
+
+  // Verificar que no sea ya miembro
+  const { data: existing } = await supabase
+    .from('project_members')
+    .select('id')
+    .eq('project_id', projectId)
+    .eq('user_id', profile.id)
+    .single()
+
+  if (existing) throw new Error('Este usuario ya es miembro del proyecto.')
+
+  const { error } = await supabase
+    .from('project_members')
+    .insert({ project_id: projectId, user_id: profile.id, role: 'editor' })
+
+  if (error) throw error
+}
+
+export async function removeMember(memberId: string): Promise<void> {
+  const { error } = await supabase
+    .from('project_members')
+    .delete()
+    .eq('id', memberId)
+
+  if (error) throw error
+}
+
 export async function deleteProject(id: string): Promise<void> {
   const { error } = await supabase
     .from('projects')

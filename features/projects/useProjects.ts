@@ -49,6 +49,22 @@ export function useDeleteProject() {
   })
 }
 
+export function useAddMember(projectId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (email: string) => projectService.addMemberByEmail(projectId, email),
+    onSuccess: () => qc.invalidateQueries({ queryKey: projectKeys.detail(projectId) }),
+  })
+}
+
+export function useRemoveMember(projectId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (memberId: string) => projectService.removeMember(memberId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: projectKeys.detail(projectId) }),
+  })
+}
+
 export function useUpdateProjectNotes(id: string) {
   const qc = useQueryClient()
   return useMutation({
